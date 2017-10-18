@@ -1,0 +1,27 @@
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aap="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    tools:context="com.hello.one.cabdrive.DriverMapsActivity"
+    android:id="@+id/driverLayout"
+    tools:openDrawer="start"
+    android:fitsSystemWindows="true">
+
+    <include
+        layout="@layout/drivenavswipe"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <android.support.design.widget.NavigationView
+        android:id="@+id/driverNavView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        aap:headerLayout="@layout/drive_nav_header"
+        aap:menu="@menu/menu">
+
+    </android.support.design.widget.NavigationView>
+
+</android.support.v4.widget.DrawerLayout>

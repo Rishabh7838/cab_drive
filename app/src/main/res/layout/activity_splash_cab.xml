@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.hello.one.cabdrive.splashCab"
+    android:background="#191919">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="F.CAB"
+        android:gravity="center|center_vertical"
+        android:textColor="#fff"
+        android:textStyle="bold|italic"
+        android:textSize="@dimen/cast_intro_overlay_focus_radius"
+        />
+</FrameLayout>

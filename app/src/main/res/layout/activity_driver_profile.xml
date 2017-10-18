@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.hello.one.cabdrive.driverProfile"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:elevation="18dp"
+    android:fillViewport="true"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+
+
+<RelativeLayout
+android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_weight="3"
+    >
+    <ImageView
+        android:layout_width="100sp"
+        android:layout_height="100sp"
+        android:layout_margin="10dp"
+        android:src="@mipmap/prof"
+        android:layout_centerInParent="true"
+        android:foregroundGravity="center"
+        android:id="@+id/driveprof"/>
+</RelativeLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_weight="1">
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp">
+            <android.support.design.widget.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint=" Enter Name"
+        android:id="@+id/driveName"
+        android:text="" />
+    </android.support.design.widget.TextInputLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp">
+    <android.support.design.widget.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Number"
+        android:id="@+id/driveNumber"
+        android:text=""
+        android:inputType="phone"
+        />
+            </android.support.design.widget.TextInputLayout>
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp">
+    <android.support.design.widget.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint=" Car"
+        android:id="@+id/driveCar"
+        android:text="" />
+            </android.support.design.widget.TextInputLayout>
+<RadioGroup
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:id="@+id/radioGroup"
+    android:layout_below="@+id/driveCar">
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DP_X"
+        android:id="@+id/DPX"
+        />
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DP_Black"
+        android:id="@+id/DPBlack"
+        />
+    <RadioButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DP_XL"
+        android:id="@+id/DPXL"
+        />
+</RadioGroup>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Submit"
+        android:layout_marginTop="10dp"
+        android:id="@+id/drivesub"
+        android:textStyle="bold"
+        android:layout_below="@+id/radioGroup"
+        />
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

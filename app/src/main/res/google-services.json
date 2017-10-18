@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "150305359575",
+    "firebase_url": "https://cabdrive-6078c.firebaseio.com",
+    "project_id": "cabdrive-6078c",
+    "storage_bucket": "cabdrive-6078c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:150305359575:android:73fa588df8177055",
+        "android_client_info": {
+          "package_name": "com.hello.one.cabdrive"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "150305359575-qfhqrfupocc2bgn5hehcav1blotlfc70.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hello.one.cabdrive",
+            "certificate_hash": "4646949da8d091eccb829b1580106142d3df37fd"
+          }
+        },
+        {
+          "client_id": "150305359575-8sggvgsrgbh1m0pskb31gjvlla3vln7n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7j197wNV6yGUTmfX0P1yHfB_a4bHAkas"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "150305359575-8sggvgsrgbh1m0pskb31gjvlla3vln7n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

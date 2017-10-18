@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="bottom"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark"
+    android:background="#191919"
+    >
+    <ImageView
+        android:layout_width="100sp"
+        android:layout_height="100sp"
+        android:src="@mipmap/prof"
+        android:id="@+id/CustomerProfHead"
+        android:layout_margin="10dp"
+        />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/CustomerNameHead"
+        android:layout_margin="10dp"
+        android:textColor="#fff"/>
+</LinearLayout>
