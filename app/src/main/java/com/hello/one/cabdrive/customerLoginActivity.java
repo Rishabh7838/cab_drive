@@ -95,12 +95,14 @@ public class customerLoginActivity extends AppCompatActivity {
     private void signIn(){
         final String email = memail1.getText().toString();
         final String pass = mpass1.getText().toString();
-        mProgressBar.setMessage("Registering User...");
+        mProgressBar.setMessage("Signing in");
+        mProgressBar.setCanceledOnTouchOutside(false);
         mProgressBar.show();
         mAuth.signInWithEmailAndPassword(email, pass).addOnCompleteListener(customerLoginActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (!task.isSuccessful()) {
+                    mProgressBar.dismiss();
                     Toast.makeText(customerLoginActivity.this, "sign up error", Toast.LENGTH_SHORT).show();
                 }
                 else {
@@ -132,11 +134,13 @@ public class customerLoginActivity extends AppCompatActivity {
         final String email = memail1.getText().toString();
         final String pass = mpass1.getText().toString();
         mProgressBar.setMessage("Registering User...");
+        mProgressBar.setCanceledOnTouchOutside(false);
         mProgressBar.show();
         mAuth.createUserWithEmailAndPassword(email,pass).addOnCompleteListener(customerLoginActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if(!task.isSuccessful()){
+                    mProgressBar.dismiss();
                     Toast.makeText(customerLoginActivity.this,"sign up error",Toast.LENGTH_SHORT).show();
                 }
                 else

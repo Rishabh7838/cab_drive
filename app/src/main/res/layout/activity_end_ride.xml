@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:theme="@style/AppTheme1"
+    tools:context="com.hello.one.cabdrive.EndRideActivity"
+    android:background="#229954"
+    >
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:layout_weight="1"
+    android:text="Thank You ^.^"
+    android:textSize="@dimen/cast_expanded_controller_control_toolbar_min_height"
+    android:textStyle="bold"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:id="@+id/endPrice"
+        android:layout_weight="1"
+        android:text=" "
+        android:textSize="@dimen/cast_expanded_controller_control_toolbar_min_height"
+        android:textStyle="bold"/>
+</LinearLayout>

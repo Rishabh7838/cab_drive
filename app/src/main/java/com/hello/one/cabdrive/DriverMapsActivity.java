@@ -28,9 +28,11 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -75,17 +77,22 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
     private GoogleMap mMap;
     private GoogleApiClient client;
     Location lastLocation;
+    private Switch mSwitch;
+    private float rideDistance;
     LocationRequest locationRequest;
     private  SupportMapFragment mapFragment;
     private String customerId = "",customerKey,customerThere;
     Boolean isLoggingOut = false;
+    private int status = 0;
     private LinearLayout mCustomerInfo;
     private ValueEventListener value;
     private DatabaseReference puttingDriver;
     private ImageView mCustomerProfileImage,mDriverNav,mDriverProfHead;
     private TextView mCustomerNumber, mCustomerName,mCustomerDestination,mstartRide,mDriverNameHead;
     private FrameLayout mdriverLayout;
+    private Button mCancelCustomerRide;
     private TabLayout tabLayout;
+    private LatLng destinationLatLng;
     private ViewPager viewPager;
     private String driverId,destination,mCustomerCoordinates;
     private LatLng driverLatlng;
@@ -98,7 +105,13 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
         String DetailDriverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         DatabaseReference Drivers = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DetailDriverId);
 
-        Toast.makeText(this, "Driver id "+DetailDriverId, Toast.LENGTH_SHORT).show();
+        if(lastLocation == null)
+        {
+       //     lastLocation.setLatitude(0);
+         //   lastLocation.setLongitude(0);
+           // Toast.makeText(this, "current locstion is null", Toast.LENGTH_SHORT).show();
+        }
+       // Toast.makeText(this, "Driver id "+DetailDriverId, Toast.LENGTH_SHORT).show();
         Drivers.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -106,7 +119,7 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
 
 
                     Intent drive = new Intent(DriverMapsActivity.this, driverProfile.class);
-                    Toast.makeText(DriverMapsActivity.this, "Insert details of driver first", Toast.LENGTH_SHORT).show();
+             //       Toast.makeText(DriverMapsActivity.this, "Insert details of driver first", Toast.LENGTH_SHORT).show();
                     startActivity(drive);
                     finish();
                     return;
@@ -117,7 +130,7 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
 
                     if (dataSnapshot.child("Services").getValue().toString().trim().matches("") || dataSnapshot.child("name").getValue().toString().trim().matches("") || dataSnapshot.child("number").getValue().toString().trim().matches("") || dataSnapshot.child("ProfileImageUrl").getValue().toString().trim().matches("")) {
                         Intent drive = new Intent(DriverMapsActivity.this, driverProfile.class);
-                        Toast.makeText(DriverMapsActivity.this, "Insert details of driver first", Toast.LENGTH_SHORT).show();
+                     //   Toast.makeText(DriverMapsActivity.this, "Insert details of driver first", Toast.LENGTH_SHORT).show();
                         startActivity(drive);
                         finish();
                         return;
@@ -148,11 +161,22 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
         mCustomerName = (TextView) findViewById(R.id.customerName);
         mCustomerNumber = (TextView) findViewById(R.id.customerNumber);
         mstartRide = (TextView) findViewById(R.id.startRide);
-
+        mCancelCustomerRide = (Button) findViewById(R.id.cancelCustomerRide);
+        mSwitch = (Switch) findViewById(R.id.switcher);
+        mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    connectDriver();
+                    Toast.makeText(DriverMapsActivity.this, "Driver Working", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    disconnectDriver();
+                }
+            }
+        });
 
         mCustomerDestination = (TextView) findViewById(R.id.customerDestination);
-        //LayoutInflater inflator = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        //View vi = inflator.inflate(R.layout.drivenavswipe,null);
         driverSwipeLayout = (CoordinatorLayout) findViewById(R.id.driverSwipeLayout);
         final NavigationView navigationView = (NavigationView) findViewById(R.id.driverNavView);
 
@@ -207,7 +231,10 @@ public class DriverMapsActivity extends FragmentActivity implements OnMapReadyCa
                         finish();
                         break;
                     case R.id.driverHistory:
-                        Toast.makeText(DriverMapsActivity.this, "History not available now", Toast.LENGTH_SHORT).show();
+                        Intent history = new Intent(DriverMapsActivity.this,historyActivity.class);
+                        history.putExtra("customerOrDriver","Drivers");
+                        startActivity(history);
+                        //Toast.makeText(DriverMapsActivity.this, "No history", Toast.LENGTH_SHORT).show();
                         break;
 
                 }
@@ -239,276 +266,151 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onClick(View v) {
         //Toast.makeText(DriverMapsActivity.this, "Pickup ="+driverLatlng+" Destination= "+mCustomerCoordinates, Toast.LENGTH_SHORT).show();
-        Uri navigationUri = Uri.parse("http://maps.google.com/maps?saddr="+driverLatlng.latitude+","+driverLatlng.longitude+"&daddr="+destination);
-        Intent mapIntent = new Intent(Intent.ACTION_VIEW,navigationUri);
-        mapIntent.setPackage("com.google.android.apps.maps");
-        if(mapIntent.resolveActivity(getPackageManager())!=null){
-            startActivity(mapIntent);
-            return;
-        }
-        else{
-            Toast.makeText(DriverMapsActivity.this, "No Map related app found", Toast.LENGTH_SHORT).show();
-        }
+        AlertDialog.Builder rideOrPickup = new AlertDialog.Builder(DriverMapsActivity.this);
+        rideOrPickup.setTitle("Customer Picked ?");
+        rideOrPickup.setCancelable(false);
+        rideOrPickup.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mCancelCustomerRide.setText("End Ride");
+                status = 3;
+                //Uri navigationUri = Uri.parse("http://maps.google.com/maps?saddr="+driverLatlng.latitude+","+driverLatlng.longitude+"&daddr="+destination);
+                Uri navigationUri = Uri.parse("google.navigation:q="+destination);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW,navigationUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                if(mapIntent.resolveActivity(getPackageManager())!=null){
+                    startActivity(mapIntent);
+                    return;
+                }
+                else{
+                    Toast.makeText(DriverMapsActivity.this, "No Map related app found", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        rideOrPickup.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                status = 2;
+                mCancelCustomerRide.setText("Start your ride with customer");
+                //Uri navigationUri = Uri.parse("http://maps.google.com/maps?saddr="+lastLocation.getLatitude()+","+lastLocation.getLongitude()+"&daddr="+driverLatlng.latitude+","+driverLatlng.longitude);
+                Uri navigationUri = Uri.parse("google.navigation:q="+driverLatlng.latitude+","+driverLatlng.longitude);
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW,navigationUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                if(mapIntent.resolveActivity(getPackageManager())!=null){
+                    startActivity(mapIntent);
+                    return ;
+
+                }
+                else{
+                    Toast.makeText(DriverMapsActivity.this, "No Map related app found", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+        AlertDialog create = rideOrPickup.create();
+        create.show();
+
     }
 });
+
+
+        mCancelCustomerRide.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switch(status){
+
+                    case 1:
+                        endRide();
+                        mCancelCustomerRide.setVisibility(View.GONE);
+//                        status=2;
+//                        erasePolylines();
+//                        if(destinationLatLng.latitude!=0.0 && destinationLatLng.longitude!=0.0){
+//                            getRouterMarker(destinationLatLng);
+//                        }
+//                        mCancelCustomerRide.setText("drive completed");
+//                        mCancelCustomerRide.setVisibility(View.GONE);
+                        break;
+                    case 2:
+                        Toast.makeText(DriverMapsActivity.this, "Click 'start ride' button in info on screen", Toast.LENGTH_LONG).show();
+//                        recordRide();
+//                        endRide();
+                        break;
+                    case 3:
+
+                        Intent intent = new Intent(DriverMapsActivity.this, EndRideActivity.class);
+                        Bundle b = new Bundle();
+                        b.putString("ridePrice", rideDistance+"");
+                        intent.putExtras(b);
+                        startActivity(intent);
+                        endRide();
+                        break;
+                }
+            }
+        });
     }
 
 
 
             private void getAssignCustomer() {
          driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-      //previous  final DatabaseReference assignCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRiderId");//
-                 puttingDriver = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("CustomerAppointed");
-                 puttingDriver.addValueEventListener(new ValueEventListener() {
+
+
+                DatabaseReference assignedCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest").child("customerRideId");
+                assignedCustomerRef.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if(dataSnapshot.exists()){
-                            Toast.makeText(DriverMapsActivity.this, "Customer there = "+dataSnapshot.getValue().toString(), Toast.LENGTH_SHORT).show();
-                            customerThere = dataSnapshot.getValue().toString();
+                            status = 1;
+
+                            //Toast.makeText(DriverMapsActivity.this, "Got driver", Toast.LENGTH_SHORT).show();
+                            customerId = dataSnapshot.getValue().toString();
+                            getAssignCustomerPickUpLocation();
                             getCustomerDestination();
                             getAssignedCustomerInfo();
-                            LayoutInflater customerInfoDialouge = LayoutInflater.from(DriverMapsActivity.this);
-                            final View dialogView = customerInfoDialouge.inflate(R.layout.customer_info,null);
-
-                            final DatabaseReference assignCustomerRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerThere);
-                            assignCustomerRef.addChildEventListener(new ChildEventListener() {
-                                @Override
-                                public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
-                                    if (dataSnapshot.exists()){ //&& customerId.equals(""))||(dataSnapshot.exists() && customerId.equals("")==false)) {
-                                        Toast.makeText(DriverMapsActivity.this, "Customer request came", Toast.LENGTH_SHORT).show();
-                                        if (dataSnapshot.exists()) {
-
-                                            Snackbar requestComing = Snackbar.make(driverSwipeLayout, "A Customer request is coming", Snackbar.LENGTH_LONG).setAction("See", new View.OnClickListener() {
-                                                @Override
-                                                public void onClick(View v) {
-                                                    AlertDialog.Builder seeRequest = new AlertDialog.Builder(DriverMapsActivity.this);
-                                                    seeRequest.setView(dialogView);
-                                                    seeRequest.setCancelable(false);
-                                                    seeRequest.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-
-                                                            customerId = dataSnapshot.getValue().toString();
-                                                            customerKey = dataSnapshot.getKey().toString();
-                                                            Toast.makeText(DriverMapsActivity.this, "Customer avaliable key = " + customerKey, Toast.LENGTH_SHORT).show();
-                                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerThere).child("DriverAppointed");
-                                                            HashMap mapAnswer = new HashMap();
-                                                            //mapAnswer.put("Driver_Alloted", driverId);
-                                                            mapAnswer.put("Answer", "Accept");
-                                                            driverRef.updateChildren(mapAnswer);
-                                                            getAssignCustomerPickUpLocation();
-
-                                                        }
-                                                    });
-                                                    seeRequest.setNegativeButton("Reject", new DialogInterface.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(DialogInterface dialog, int which) {
-
-                                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerThere).child("DriverAppointed");
-                                                            HashMap mapAnswer = new HashMap();
-                                                            //mapAnswer.put("Driver_Alloted", driverId);
-                                                            mapAnswer.put("Answer", "Rejected");
-                                                            driverRef.updateChildren(mapAnswer);
-
-                                                            DatabaseReference driverReject = FirebaseDatabase.getInstance().getReference().child("DriverNotAvailable").child(customerThere).child("DriverUnavailable").child(driverId);
-                                                            driverReject.setValue(true);
-
-                                                            DatabaseReference removeCustReq = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest");
-                                                            removeCustReq.removeValue();
-//                                        rejectCustomer();
-
-//                                    geoFireRemove.removeLocation(driverId);
-//
-//                                    if (pickMarker != null) {
-//                                        pickMarker.remove();
-//                                    }
-//                                    if (assignCustomerPickUpLocationListener != null) {
-//                                        assignCustomerPickUpLocationRef.removeEventListener(assignCustomerPickUpLocationListener);
-//                                    }
-                                                            //mCustomerInfo.setVisibility(View.GONE);
-                                                            mCustomerName.setText("");
-                                                            mCustomerNumber.setText("");
-                                                            mCustomerDestination.setText("Destination...");
-                                                            mCustomerProfileImage.setImageResource(R.mipmap.prof);
-                                                        }
-                                                    });
-                                                    AlertDialog create = seeRequest.create();
-                                                    create.show();
-                                                }
-                                            });
-                                            requestComing.show();
-                                        }
-                                        else
-                                        {
-                                            Toast.makeText(DriverMapsActivity.this, "Driver not appointed", Toast.LENGTH_SHORT).show();
-                                        }
-                                    }
-                                    else {
-                                        erasePolylines();
-                                        customerId = "";
-                                        if (pickMarker != null) {
-                                            pickMarker.remove();
-                                        }
-                                        if (assignCustomerPickUpLocationListener != null) {
-                                            assignCustomerPickUpLocationRef.removeEventListener(assignCustomerPickUpLocationListener);
-                                        }
-                                       // mCustomerInfo.setVisibility(View.GONE);
-                                        mCustomerName.setText("");
-                                        mCustomerNumber.setText("");
-                                        mCustomerProfileImage.setImageResource(R.mipmap.prof);
-                                    }
-                                }
-
-                                @Override
-                                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                                }
-
-                                @Override
-                                public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                                }
-
-                                @Override
-                                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            } );
-//                                @Override
-//                                public void onDataChange(final DataSnapshot dataSnapshot) {
-//                                    if (dataSnapshot.exists()){ //&& customerId.equals(""))||(dataSnapshot.exists() && customerId.equals("")==false)) {
-//                                        Toast.makeText(DriverMapsActivity.this, "Customer request came", Toast.LENGTH_SHORT).show();
-//                                        if (dataSnapshot.exists()) {
-//
-//                                            Snackbar requestComing = Snackbar.make(mdriverLayout, "A Customer request is coming", Snackbar.LENGTH_LONG).setAction("See", new View.OnClickListener() {
-//                                                @Override
-//                                                public void onClick(View v) {
-//                                                    AlertDialog.Builder seeRequest = new AlertDialog.Builder(DriverMapsActivity.this);
-//                                                    seeRequest.setTitle("Do you want to accept customer request");
-//                                                    seeRequest.setCancelable(false);
-//                                                    seeRequest.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
-//                                                        @Override
-//                                                        public void onClick(DialogInterface dialog, int which) {
-//
-//                                                            customerId = dataSnapshot.getValue().toString();
-//                                                            customerKey = dataSnapshot.getKey().toString();
-//                                                            Toast.makeText(DriverMapsActivity.this, "Customer avaliable key = " + customerKey, Toast.LENGTH_SHORT).show();
-//                                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerKey).child("DriverAppointed");
-//                                                            HashMap mapAnswer = new HashMap();
-//                                                            //mapAnswer.put("Driver_Alloted", driverId);
-//                                                            mapAnswer.put("Answer", "Accept");
-//                                                            driverRef.updateChildren(mapAnswer);
-//                                                            getAssignCustomerPickUpLocation();
-//                                                            getCustomerDestination();
-//                                                            getAssignedCustomerInfo();
-//                                                        }
-//                                                    });
-//                                                    seeRequest.setNegativeButton("Reject", new DialogInterface.OnClickListener() {
-//                                                        @Override
-//                                                        public void onClick(DialogInterface dialog, int which) {
-//
-//                                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("DriverAppointed");
-//                                                            HashMap mapAnswer = new HashMap();
-//                                                            //mapAnswer.put("Driver_Alloted", driverId);
-//                                                            mapAnswer.put("Answer", "Rejected");
-//                                                            driverRef.updateChildren(mapAnswer);
-//
-//                                                            DatabaseReference driverReject = FirebaseDatabase.getInstance().getReference().child("DriverNotAvailable").child(customerId);
-//                                                            HashMap driverNotAvailable = new HashMap();
-//
-//                                                            driverNotAvailable.put("DriverUnavailable",driverId);
-//                                                            driverReject.updateChildren(mapAnswer);
-////                                        rejectCustomer();
-//
-////                                    geoFireRemove.removeLocation(driverId);
-////
-////                                    if (pickMarker != null) {
-////                                        pickMarker.remove();
-////                                    }
-////                                    if (assignCustomerPickUpLocationListener != null) {
-////                                        assignCustomerPickUpLocationRef.removeEventListener(assignCustomerPickUpLocationListener);
-////                                    }
-//                                                            mCustomerInfo.setVisibility(View.GONE);
-//                                                            mCustomerName.setText("");
-//                                                            mCustomerNumber.setText("");
-//                                                            mCustomerProfileImage.setImageResource(R.mipmap.prof);
-//                                                        }
-//                                                    });
-//                                                    AlertDialog create = seeRequest.create();
-//                                                    create.show();
-//                                                }
-//                                            });
-//                                            requestComing.show();
-//                                        }
-//                                        else
-//                                        {
-//                                            Toast.makeText(DriverMapsActivity.this, "Driver not appointed", Toast.LENGTH_SHORT).show();
-//                                        }
-//                                    }
-//                                    else {
-//                                        erasePolylines();
-//                                        customerId = "";
-//                                        if (pickMarker != null) {
-//                                            pickMarker.remove();
-//                                        }
-//                                        if (assignCustomerPickUpLocationListener != null) {
-//                                            assignCustomerPickUpLocationRef.removeEventListener(assignCustomerPickUpLocationListener);
-//                                        }
-//                                        mCustomerInfo.setVisibility(View.GONE);
-//                                        mCustomerName.setText("");
-//                                        mCustomerNumber.setText("");
-//                                        mCustomerProfileImage.setImageResource(R.mipmap.prof);
-//                                    }
-//                                }
-//
-//                                @Override
-//                                public void onCancelled(DatabaseError databaseError) {
-//
-//                                }
-//                            });
-
-
+                            getHasRideCanceled();
+                        }else{
+                           // Toast.makeText(DriverMapsActivity.this, "Ending Driver Ride", Toast.LENGTH_SHORT).show();
+                            //endRide();
                         }
-                        else
-                            Toast.makeText(DriverMapsActivity.this, "forget about customer", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-
                     }
                 });
 
 
+                        }
 
 
-    }
-
-    private void rejectCustomer() {
-        //String userid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-       // String driverRemoveid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-    }
 
     private void getCustomerDestination() {
         String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        final DatabaseReference assignCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest").child("Destination");
-       // final DatabaseReference assignCustomerCoordinates = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest").child("Destination");//
+        final DatabaseReference assignCustomerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest");
         assignCustomerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists() && customerId!=null) {
+                if (dataSnapshot.exists() && customerId != null) {
 
-                    destination = dataSnapshot.getValue().toString();
+                    Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                    if (map.get("destination") != null) {
+                        destination = map.get("destination").toString();
+                        mCustomerDestination.setText("Destination: " + destination);
 
-                    mCustomerDestination.setText("Destination = "+destination);
-                } else {
-                    mCustomerDestination.setText("Destination...");
+                    } else {
+                        mCustomerDestination.setText("Destination...");
+                    }
+                    Double destinationLat = 0.0;
+                    Double destinationLng = 0.0;
+                    if (map.get("destinationLat") != null) {
+                        destinationLat = Double.valueOf(map.get("destinationLat").toString());
+                    }
+                    if (map.get("destinationLon") != null) {
+                        destinationLng = Double.valueOf(map.get("destinationLon").toString());
+                        destinationLatLng = new LatLng(destinationLat, destinationLng);
+                    }
                 }
             }
 
@@ -535,8 +437,10 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
     }
 
     private void getAssignedCustomerInfo() {
-
-        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Custmores").child(customerThere);
+        mCustomerInfo.setVisibility(View.VISIBLE);
+        mCancelCustomerRide.setVisibility(View.VISIBLE);
+        Toast.makeText(this, "Inside Customer Info", Toast.LENGTH_SHORT).show();
+        DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Custmores").child(customerId);
         mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -552,7 +456,7 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
 
                         Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mCustomerProfileImage);
                     }
-                    //mCustomerInfo.setVisibility(View.VISIBLE);
+
 
                 }
             }
@@ -572,7 +476,7 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
     ValueEventListener assignCustomerPickUpLocationListener;
     private void getAssignCustomerPickUpLocation() {
 //        String driverId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-         assignCustomerPickUpLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerThere).child("l");
+         assignCustomerPickUpLocationRef = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(customerId).child("l");
        assignCustomerPickUpLocationListener = assignCustomerPickUpLocationRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -596,6 +500,7 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
 
 
                     pickMarker =  mMap.addMarker(new MarkerOptions().position(driverLatlng).title("PickUp Location.").icon(BitmapDescriptorFactory.fromResource(R.mipmap.customer)));
+
                     getRouterMarker(driverLatlng);
 
                 }
@@ -606,6 +511,83 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
 
             }
         });
+    }
+    private DatabaseReference driveHasEndedRef;
+    private ValueEventListener driveHasEndedRefListener;
+    private void getHasRideCanceled(){
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        driveHasEndedRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("customerRequest");
+        driveHasEndedRefListener = driveHasEndedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.hasChildren()){
+                    Toast.makeText(DriverMapsActivity.this, "inside getHasRideCanceled", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(DriverMapsActivity.this, "Customer Cancelled the ride", Toast.LENGTH_LONG).show();
+                    endRide();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+    private void endRide(){
+        Toast.makeText(DriverMapsActivity.this, "Ending ride from driver", Toast.LENGTH_SHORT).show();
+      // mCancelCustomerRide.setText("picked customer");
+        erasePolylines();
+        driveHasEndedRef.removeEventListener(driveHasEndedRefListener);
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("customerRequest");
+        driverRef.removeValue();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+        GeoFire geoFire = new GeoFire(ref);
+        geoFire.removeLocation(customerId);
+        customerId="";
+        rideDistance=0;
+        if(pickMarker != null){
+            pickMarker.remove();
+        }
+        if (assignCustomerPickUpLocationListener != null){
+            assignCustomerPickUpLocationRef.removeEventListener(assignCustomerPickUpLocationListener);
+        }
+        mCustomerInfo.setVisibility(View.GONE);
+        mCustomerName.setText("");
+        mCustomerNumber.setText("");
+        mCustomerDestination.setText("Destination: --");
+        mCancelCustomerRide.setText("Cancel Ride");
+        mCancelCustomerRide.setVisibility(View.GONE);
+        mCustomerProfileImage.setImageResource(R.mipmap.prof);
+    }
+
+    private void recordRide(){
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(userId).child("history");
+        DatabaseReference customerRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Custmores").child(customerId).child("history");
+        DatabaseReference historyRef = FirebaseDatabase.getInstance().getReference().child("history");
+        String requestId = historyRef.push().getKey();
+        driverRef.child(requestId).setValue(true);
+        customerRef.child(requestId).setValue(true);
+
+        HashMap map = new HashMap();
+        map.put("driver", userId);
+        map.put("customer", customerId);
+        map.put("rating", 0);
+        map.put("timestamp", getCurrentTimestamp());
+        map.put("destination", destination);
+        map.put("location/from/lat",driverLatlng.latitude);
+        map.put("location/from/lon",driverLatlng.longitude);
+        map.put("location/to/lat",destinationLatLng.latitude);
+        map.put("location/to/lon",destinationLatLng.longitude);
+        map.put("distance",rideDistance);
+        historyRef.child(requestId).updateChildren(map);
+    }
+
+    private Long getCurrentTimestamp() {
+        Long timestamp = System.currentTimeMillis()/1000;
+        return timestamp;
     }
 
     private void getRouterMarker(LatLng driverLatLng) {
@@ -619,6 +601,12 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
         routing.execute();
     }
 
+public void connectDriver(){
+    if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(DriverMapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION },LOCATION_REQUEST_CODE);
+    }
+    LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, this);
+}
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -645,6 +633,10 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onLocationChanged(Location location) {
         if(getApplicationContext()!=null) {
+
+                if(!customerId.equals("")) {
+                    rideDistance += lastLocation.distanceTo(location) / 1000;
+                }
             lastLocation = location;
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
@@ -677,10 +669,7 @@ mstartRide.setOnClickListener(new View.OnClickListener() {
         locationRequest.setInterval(3000);
         locationRequest.setFastestInterval(3000);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(DriverMapsActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION },LOCATION_REQUEST_CODE);
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, this);
+
     }
 
     @Override
@@ -698,6 +687,20 @@ private void disconnectDriver()
     LocationServices.FusedLocationApi.removeLocationUpdates(client ,this);
 //    puttingDriver.removeEventListener(value);
     String userid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+    final DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(driverId).child("customerRequest");
+    driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            if(dataSnapshot.exists()){
+                driverRef.removeValue();
+            }
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    });
     DatabaseReference refAvaliable = FirebaseDatabase.getInstance().getReference("driverAvaliable");
     GeoFire geoFire = new GeoFire(refAvaliable);
     geoFire.removeLocation(userid);
@@ -727,14 +730,16 @@ final int LOCATION_REQUEST_CODE = 1;
 //        super.onResume();
 //        finish();
 //    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if(!isLoggingOut){
+//            disconnectDriver();
+//        }
+//    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if(!isLoggingOut){
-            disconnectDriver();
-        }
-    }
+
 
     private List<Polyline> polylines;
     private  static final int[] COLORS = {R.color.colorPrimaryDark};

@@ -179,6 +179,7 @@ public class driverProfile extends AppCompatActivity {
         if(resultUri!=null)
         {
             mProgressBar.setMessage("Submiting data...");
+            mProgressBar.setCanceledOnTouchOutside(false);
             mProgressBar.show();
             StorageReference filePath = FirebaseStorage.getInstance().getReference().child("profile_images").child(userId);
             Bitmap bitmap = null;
@@ -197,6 +198,7 @@ public class driverProfile extends AppCompatActivity {
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
+                    mProgressBar.dismiss();
                     Toast.makeText(driverProfile.this,"Profile failure",Toast.LENGTH_SHORT).show();
                     finish();
                     return;

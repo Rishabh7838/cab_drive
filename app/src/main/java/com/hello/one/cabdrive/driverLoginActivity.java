@@ -60,7 +60,7 @@ try {
                     turnGPSOn();
 
 
-                    Toast.makeText(driverLoginActivity.this, "Enabling your GPS for your current location", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(driverLoginActivity.this, "Enabling your GPS for your current location", Toast.LENGTH_SHORT).show();
                 }
 
 
@@ -119,7 +119,7 @@ catch(Exception e)
     private void signIn(){
         final String email = memail.getText().toString();
         final String pass = mpass.getText().toString();
-        mProgressBar.setMessage("Loging in");
+        mProgressBar.setMessage("Signing in");
         mProgressBar.setCanceledOnTouchOutside(false);
         mProgressBar.show();
 

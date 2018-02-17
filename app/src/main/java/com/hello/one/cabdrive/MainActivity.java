@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mDriver = (TextView) findViewById(R.id.Drive);
         mCust = (TextView) findViewById(R.id.Cust);
+        startService(new Intent(MainActivity.this,onAppKilled.class));
         mDriver.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -25,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -79,6 +80,7 @@ public class CustomerMapsActivity extends FragmentActivity implements OnMapReady
     private Button mlogout,mCall,mProfile;
     private SupportMapFragment mapFragment;
     private Polyline line;
+    private RatingBar mRatingBar;
     private LatLng pickUpLocation,source;
     private Boolean Cancel = false,isLoggingout=false,isDriverNotAvailable =false;
     private GeoQuery geoQuery;
@@ -145,6 +147,7 @@ public class CustomerMapsActivity extends FragmentActivity implements OnMapReady
         mDriverInfo = (LinearLayout) findViewById(R.id.driverInfo);
         mCustomerProfileImage = (ImageView) findViewById(R.id.customerProfileImage);
         mDriverName = (TextView) findViewById(R.id.driverNameView);
+        mRatingBar = (RatingBar) findViewById(R.id.ratingbar1);
         mDriverNumber = (TextView) findViewById(R.id.driveerNumberView);
         mDriverCar = (TextView) findViewById(R.id.driveerCarView);
         mDriverCall= (TextView) findViewById(R.id.callDriver);
@@ -202,7 +205,9 @@ public class CustomerMapsActivity extends FragmentActivity implements OnMapReady
                         finish();
                         break;
                     case R.id.customerHistory:
-                        Toast.makeText(CustomerMapsActivity.this, "History Not Available now", Toast.LENGTH_SHORT).show();
+                        Intent history = new Intent(CustomerMapsActivity.this,historyActivity.class);
+                        history.putExtra("customerOrDriver","Custmores");
+                        startActivity(history);
                         break;
 
                 }
@@ -273,31 +278,8 @@ public class CustomerMapsActivity extends FragmentActivity implements OnMapReady
             public void onClick(View v) {
                 erasePolylines();
                 mCall.setEnabled(true);
-                Cancel = false;
-                geoQuery.removeAllListeners();
-                driverLocationRef.removeEventListener(EventListener);
+                endRide();
 
-                if (DriverId != null) {
-                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId).child("customerRequest");
-                    driverRef.setValue(true);
-                    DriverId = null;
-                }
-                driverFound = false;
-                radius = 1;
-                String userid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
-                GeoFire GF = new GeoFire(ref);
-                GF.removeLocation(userid);
-                if (pickUpMarker != null) {
-                    pickUpMarker.remove();
-                }
-                mDriverInfo.setVisibility(View.GONE);
-                mRadioGroup.setVisibility(View.VISIBLE);
-                mDriverName.setText("");
-                mDriverNumber.setText("");
-                mDriverCar.setText("");
-                mCustomerProfileImage.setImageResource(R.mipmap.prof);
-                mCall.setText("Call Cab");
 
             }
         });
@@ -350,16 +332,12 @@ public class CustomerMapsActivity extends FragmentActivity implements OnMapReady
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if(dataSnapshot.hasChild("driverAvaliable")){
                                     Toast.makeText(CustomerMapsActivity.this, "finding driver from avaliable driver", Toast.LENGTH_SHORT).show();
-//                                    DatabaseReference destinations = FirebaseDatabase.getInstance().getReference().child("Users").child("Custmores").child(activeCustomerid);
-//                                    HashMap map1 = new HashMap();
-//                                    map1.put("Destination", destination);
-//                                    destinations.updateChildren(map1);
                                     getCloestDistance();
                                 }
                                 else
                                 {
                                     Toast.makeText(CustomerMapsActivity.this, "No driver exist", Toast.LENGTH_SHORT).show();
-                                    ref.removeValue();
+                                   // ref.removeValue();
                                     mCall.setEnabled(true);
                                     mCall.setText("Call Cab");
                                     Cancel = false;
@@ -484,10 +462,7 @@ private void getCloestDistance() {
             public void onKeyEntered(String key, GeoLocation location) {
                 if (!driverFound && Cancel && ds.hasChild(key)==false) {
 
-                    if (driverCircle!=null){
-                        Toast.makeText(CustomerMapsActivity.this, "circle removed", Toast.LENGTH_SHORT).show();
-                        driverCircle.remove();
-                    }
+
                     DatabaseReference mCustomerDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(key);
                     mCustomerDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -497,95 +472,24 @@ private void getCloestDistance() {
                                 if (driverFound) {
                                     return;
                                 }
-                                String temp = driverMap.get("Services").toString();
-                                if (temp.equals(requestService)) {
+                                if (driverMap.get("Services").toString().equals(requestService)) {
                                     driverFound = true;
                                     DriverId = dataSnapshot.getKey();
-
-                                    final DatabaseReference checkAvailbility = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(activeCustomerid);
-                                    checkAvailbility.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(DataSnapshot dataSnapshot) {
-                                            HashMap map2 = new HashMap();
-                                            map2.put("DriverAppointed",DriverId );
-                                            checkAvailbility.updateChildren(map2);
-
-                                            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId).child("customerRequest");
-                                            String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                                            HashMap map1 = new HashMap();
-                                            map1.put("customerRiderId", customerId);
-                                            map1.put("DestinationCoordinates", destinationLatLng);
-                                            map1.put("Destination", destination);
-                                            driverRef.updateChildren(map1);
-
-                                            DatabaseReference puttingDriver = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId);
-                                            HashMap map3 = new HashMap();
-                                            map3.put("CustomerAppointed",activeCustomerid );
-                                            puttingDriver.updateChildren(map3);
-
-
-//                                            if (dataSnapshot.child("DriverAppointed").hasChild("Answer")) {
-
-                                                Toast.makeText(CustomerMapsActivity.this, "Checkimg answer", Toast.LENGTH_SHORT).show();
-
-                                                DatabaseReference checkAnswer = FirebaseDatabase.getInstance().getReference().child("customerRequest").child(activeCustomerid).child("DriverAppointed").child("Answer");
-                                                checkAnswer.addValueEventListener(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                                        if (dataSnapshot.exists()) {
-                                                            Toast.makeText(CustomerMapsActivity.this, "Answer is avaliable", Toast.LENGTH_SHORT).show();
-                                                            String Answer = dataSnapshot.getValue().toString();
-                                                            if (Answer.equals("Accept")) {
-                                                                Toast.makeText(CustomerMapsActivity.this, "Driver accept your request", Toast.LENGTH_SHORT).show();
-
-                                                                getDriverLocation();
-                                                                getDriverInfo();
-                                                            } else if (Answer.equals("Rejected")) {
-                                                                Toast.makeText(CustomerMapsActivity.this, "This driver is not avaliable again search", Toast.LENGTH_SHORT).show();
-                                                                DatabaseReference removingCurrentDriver = FirebaseDatabase.getInstance().getReference().child("customerRequest").child("DriverAppointed");
-                                                                removingCurrentDriver.removeValue();
-                                                                driverNotAvailable.child("DriverUnAvailable").setValue(DriverId);
-                                                                try {
-                                                                    geoQuery.removeAllListeners();
-                                                                }
-                                                                catch(Exception e){
-                                                                    Toast.makeText(CustomerMapsActivity.this, "Geoquery error = "+e.getMessage(), Toast.LENGTH_SHORT).show();
-                                                                }
-                                                                mCall.setEnabled(true);
-                                                                mCall.setText("Call Cab");
-                                                                radius=1;
-                                                                Cancel = false;
-                                                                getCloestDistance();
-
-                                                            }
-//                                                        } else {
-//                                                            Toast.makeText(CustomerMapsActivity.this, "No answer found", Toast.LENGTH_SHORT).show();
-//                                                            driverFound = false;
-//                                                            getCloestDistance();
-                                                        }
-                                                    }
-
-                                                    @Override
-                                                    public void onCancelled(DatabaseError databaseError) {
-
-                                                    }
-                                                });
-
-
-
-                                        }
-
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-
-                                        }
-                                    });
-
+                                    DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId).child("customerRequest");
+                                    String customerId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                                    HashMap map1 = new HashMap();
+                                    map1.put("customerRideId", customerId);
+                                    map1.put("destinationLat", destinationLatLng.latitude);
+                                    map1.put("destinationLon", destinationLatLng.longitude);
+                                    map1.put("destination", destination);
+                                    driverRef.updateChildren(map1);
+                                    getDriverLocation();
+                                    getDriverInfo();
+                                    getHasRideEnded();
 
                                 }
                             }
                         }
-
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
 
@@ -593,12 +497,11 @@ private void getCloestDistance() {
                     });
 
 
-                    mCall.setText("Waiting for driver response");
+//                    mCall.setText("Waiting for driver response");
                 }
-                else{
-                    Toast.makeText(CustomerMapsActivity.this, DriverId+" has rejected you", Toast.LENGTH_SHORT).show();
-                }
-            }
+
+                        }
+
 
             @Override
             public void onKeyExited(String key) {
@@ -613,11 +516,6 @@ private void getCloestDistance() {
             @Override
             public void onGeoQueryReady() {
                 if (!driverFound) {
-
-
-                        driverCircleOption = new CircleOptions().center(pickUpLocation).radius(radius).strokeWidth(2).strokeColor(Color.BLACK).fillColor(Color.argb(128, 255, 0, 0));
-                        driverCircle = mMap.addCircle(driverCircleOption);
-                    Toast.makeText(CustomerMapsActivity.this, "radius " +radius, Toast.LENGTH_SHORT).show();
                     radius++;
                     getCloestDistance();
                 }
@@ -656,10 +554,6 @@ private void getCloestDistance() {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists() && dataSnapshot.getChildrenCount() > 0) {
                             Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            if (mDriverName == null) {
-                                Toast.makeText(CustomerMapsActivity.this, "driver name is null = " + mDriverName, Toast.LENGTH_SHORT).show();
-                            } else
-                                Toast.makeText(CustomerMapsActivity.this, "driver name is= " + mDriverName, Toast.LENGTH_SHORT).show();
                             if (map.get("name") != null) {
                                 mDriverName.setText(map.get("name").toString());
                             }
@@ -672,6 +566,17 @@ private void getCloestDistance() {
                             if (map.get("ProfileImageUrl") != null) {
 
                                 Glide.with(getApplication()).load(map.get("ProfileImageUrl").toString()).into(mCustomerProfileImage);
+                            }
+                            float ratingSum = 0;
+                            float ratingsTotal = 0;
+                            float ratingsAvg = 0;
+                            for (DataSnapshot child : dataSnapshot.child("rating").getChildren()){
+                                ratingSum = ratingSum + Float.valueOf(child.getValue().toString());
+                                ratingsTotal++;
+                            }
+                            if(ratingsTotal!= 0){
+                                ratingsAvg = ratingSum/ratingsTotal;
+                                mRatingBar.setRating(ratingsAvg);
                             }
 
                         }
@@ -743,6 +648,58 @@ private void getDriverLocation()
         }
     });
 }
+    private DatabaseReference driveHasEndedRef;
+    private ValueEventListener driveHasEndedRefListener;
+    private void getHasRideEnded(){
+        driveHasEndedRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId).child("customerRequest").child("customerRideId");
+        driveHasEndedRefListener = driveHasEndedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+
+                }else{
+                    Toast.makeText(CustomerMapsActivity.this, "Ending customer ride", Toast.LENGTH_SHORT).show();
+
+                    endRide();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void endRide(){
+        Toast.makeText(CustomerMapsActivity.this, "Ending  ride from customer", Toast.LENGTH_SHORT).show();
+        Cancel = false;
+        geoQuery.removeAllListeners();
+        driverLocationRef.removeEventListener(EventListener);
+        driveHasEndedRef.removeEventListener(driveHasEndedRefListener);
+        if (DriverId != null) {
+            DatabaseReference driverRef = FirebaseDatabase.getInstance().getReference().child("Users").child("Drivers").child(DriverId).child("customerRequest");
+            driverRef.setValue("true");
+            DriverId = null;
+        }
+        driverFound = false;
+        radius = 1;
+        String userid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("customerRequest");
+        GeoFire GF = new GeoFire(ref);
+        GF.removeLocation(userid);
+        if (pickUpMarker != null) {
+            pickUpMarker.remove();
+        }
+        mDriverInfo.setVisibility(View.GONE);
+        mRadioGroup.setVisibility(View.VISIBLE);
+        mDriverName.setText("");
+        mDriverNumber.setText("");
+        mDriverCar.setText("");
+        mCustomerProfileImage.setImageResource(R.mipmap.prof);
+        mCall.setText("Call Cab");
+        mCall.setEnabled(true);
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -816,16 +773,16 @@ private void getDriverLocation()
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if(!isLoggingout){
-            removeCustomerRequest();
-        }
-
-
-    }
+//
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        if(!isLoggingout){
+//            removeCustomerRequest();
+//        }
+//
+//
+//    }
 
     @Override
     protected void onDestroy() {

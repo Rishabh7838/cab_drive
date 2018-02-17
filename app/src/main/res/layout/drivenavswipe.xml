@@ -16,19 +16,108 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="10dp">
+
+
         <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@mipmap/ic_list_black_24dp"
         android:id="@+id/mDriveNav"
-        android:layout_margin="10dp"
-        />
-        <include
-            layout="@layout/customer_info"
+            />
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/switcher"
+                android:text="Working Status"
+                android:layout_marginLeft="20dp"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:visibility="gone"/>
+            android:orientation="vertical"
+            android:layout_margin="10sp"
+            android:layout_gravity="bottom">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/customerInfo"
+                android:orientation="horizontal"
+                android:background="#fff"
+                android:visibility="gone"
+                >
+                <ImageView
+                    android:layout_width="100sp"
+                    android:layout_height="100sp"
+                    android:src="@mipmap/prof"
+                    android:id="@+id/customerProfileImage"
+                    android:padding="10sp"/>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="40sp"
+                    android:layout_weight="1">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/customerDestination"
+                        android:paddingTop="10sp"
+                        android:paddingBottom="10sp"
+                        android:text="Destination.."
+                        android:textStyle="bold"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/customerName"
+                        android:paddingLeft="10sp"
+                        android:paddingTop="20sp"
+                        android:textStyle="bold"
+                        />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/customerNumber"
+                        android:paddingLeft="10sp"
+                        android:paddingTop="20sp"
+                        android:textStyle="bold"
+                        />
 
+
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_gravity="end|bottom"
+                    android:layout_marginLeft="24dp"
+                    android:layout_marginBottom="5sp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/startRide"
+                        android:text="Start Ride"
+                        android:textColor="@color/colorAccent"
+                        android:textStyle="bold"
+                        />
+
+                </LinearLayout>
+            </LinearLayout>
+
+            <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/cancelCustomerRide"
+                android:visibility="gone"
+            android:text="Cancel Ride"
+            android:layout_marginTop="10dp"
+            android:textStyle="bold"/>
+        </LinearLayout>
     </FrameLayout>
 
 

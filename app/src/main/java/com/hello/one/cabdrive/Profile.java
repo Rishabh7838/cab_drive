@@ -145,7 +145,8 @@ private void getUserInfo()
     private void saveUserInformation() {
         mName = mNameField.getText().toString();
         mNumber = mNumberField.getText().toString();
-        mProgressBar.setMessage("Registering User...");
+        mProgressBar.setMessage("Submiting data");
+        mProgressBar.setCanceledOnTouchOutside(false);
         mProgressBar.show();
         Map userInfo = new HashMap();
         userInfo.put("name",mName);
@@ -169,6 +170,7 @@ private void getUserInfo()
             uploadTask.addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
+                    mProgressBar.dismiss();
                     Toast.makeText(Profile.this,"Profile failure",Toast.LENGTH_SHORT).show();
                     finish();
                     return;
